@@ -1,7 +1,7 @@
 ﻿#include <iostream>
 #include "opencv2/opencv.hpp"
 #define endl '\n'
-#define THRESHOLD 150
+#define THRESHOLD 100
 using namespace std;
 using namespace cv;
 
@@ -117,7 +117,7 @@ int roughHead(vector<Point> contr) {
 		}
 	}
 	return check;
-} //-1 is not this type : 0 is ฃ,1 is ซ, 2 is ท
+} //-1 is not this type : 0 is ฃ,1 is ซ, 2 is ท, 3 is ด
 
 int midRound(vector<Point> contr) {
 	Rect boundRect = boundingRect(contr);
@@ -202,7 +202,7 @@ int midRound(vector<Point> contr) {
 			if (countHead == 1)
 				check = 2; //ค
 			else
-				check = 3; //ต
+				check = 3; //ฅ
 		}
 		else {
 			if (countHead == 1)
@@ -212,8 +212,41 @@ int midRound(vector<Point> contr) {
 		}
 	}
 
+	if (check == 0) // fix ค
+	{
+		for (int i = 0; i < temp.rows / 2; i++)
+		{
+			if (temp.at<uchar>(i, temp.cols * 2 / 3) < THRESHOLD)
+			{
+				check = 2;
+				break;
+			}
+		}
+	}
+
+	if (check == 1) // fix ด
+	{
+		if (passHorizontalCount(contr, 1.0 / 2.0) != 2)
+			check = 4;
+	}
+
+	if (check == 3) // add ฃ
+	{
+		bool chk = true;
+		for (int i = 0; i < temp.rows / 2; i++)
+		{
+			if (temp.at<uchar>(i, temp.cols * 3 / 4) < THRESHOLD)
+			{
+				chk = false;
+				break;
+			}
+		}
+		if (chk)
+			check = 7;
+	}
+
 	return check;
-} //0 is ข, 1 is ช, 2 is ค, 3 is ต, 4 is ด, 5 is ต, 6 is ญ
+} //0 is ข, 1 is ช, 2 is ค, 3 is ต, 4 is ด, 5 is ต, 6 is ญ, 7 is ฃ
 
 int findHole(int mode, vector<Point> con)
 {
@@ -482,17 +515,22 @@ int passMaxVertical(vector<Point> contr)
 		{
 			check = 7;
 		}
-		else // จ
+		else if (temp.rows >= temp.cols) // จ
 		{
 			check = 8;
 		}
+		else
+			check = 6;
 		//rectangle(inputImage, boundRect, Scalar(255, 255, 0), 2, LINE_8, 0);
 		break;
 	case 4:
 		switch (passVerticalCount(contr, 3.0 / 4.0))
 		{
 		case 1: // ย
-			check = 0;
+			if (NoHead(contr) == 0) // ภ
+				check = 7;
+			else
+				check = 0;
 			//rectangle(inputImage, boundRect, Scalar(255, 255, 0), 2, LINE_8, 0);
 			break;
 		case 2:
@@ -591,8 +629,8 @@ int passMaxHorizontal(vector<Point> contr)
 		}
 		//rectangle(outputImage, boundRect, Scalar(255, 255, 0), 2, LINE_8, 0);
 		break;
-	case 4: //0 is ข, 1 is ช, 2 is ค, 3 is ฅ, 4 is ด, 5 is ต, 6 is ญ
-			//rectangle(outputImage, boundRect, Scalar(255, 255, 0), 2, LINE_8, 0);
+	case 4:
+		//rectangle(outputImage, boundRect, Scalar(255, 255, 0), 2, LINE_8, 0);
 		switch (roughHead(contr)) // ฃ : 0, ซ = 1, ท = 2
 		{
 		case 0:
@@ -604,8 +642,11 @@ int passMaxHorizontal(vector<Point> contr)
 		case 2:
 			check = 21;
 			break;
+		case 3:
+			check = 16;
+			break;
 		default:
-			switch (midRound(contr))
+			switch (midRound(contr)) //0 is ข, 1 is ช, 2 is ค, 3 is ฅ, 4 is ด, 5 is ต, 6 is ญ
 			{
 			case 0:
 				check = 12;
@@ -627,6 +668,9 @@ int passMaxHorizontal(vector<Point> contr)
 				break;
 			case 6:
 				check = 18;
+				break;
+			case 7:
+				check = 19;
 				break;
 			default:
 				check = -1;
@@ -739,7 +783,7 @@ int cutShabShab(int mode, vector<Point> con) {
 		xs = boundingRect(con).x;
 		ys = boundingRect(con).y;
 		xf = boundingRect(con).x + boundingRect(con).width;
-		yf = boundingRect(con).y + (boundingRect(con).height / 2);
+		yf = boundingRect(con).y + (boundingRect(con).height * 55 / 100);
 		break;
 	case 11:
 		xs = boundingRect(con).x;
@@ -766,10 +810,10 @@ int cutShabShab(int mode, vector<Point> con) {
 		yf = boundingRect(con).y + boundingRect(con).height;
 		break;
 	case 31:
-		xs = boundingRect(con).x;
-		ys = boundingRect(con).y + (boundingRect(con).height / 3);
-		xf = boundingRect(con).x + (boundingRect(con).width * 2 / 3);
-		yf = boundingRect(con).y + boundingRect(con).height;
+		xs = boundingRect(con).x + (boundingRect(con).width * 2 / 3);
+		ys = boundingRect(con).y;
+		xf = boundingRect(con).x + boundingRect(con).width;
+		yf = boundingRect(con).y + (boundingRect(con).height / 3);
 		break;
 	case 32:
 		xs = boundingRect(con).x + (boundingRect(con).width * 2 / 3);
@@ -786,13 +830,13 @@ int cutShabShab(int mode, vector<Point> con) {
 	case 34:
 		xs = boundingRect(con).x;
 		ys = boundingRect(con).y;
-		xf = boundingRect(con).x + (boundingRect(con).width / 3);
-		yf = boundingRect(con).y + (boundingRect(con).height / 3);
+		xf = boundingRect(con).x + (boundingRect(con).width / 4);
+		yf = boundingRect(con).y + (boundingRect(con).height / 4);
 		break;
 	case 35:
 		xs = boundingRect(con).x;
-		ys = boundingRect(con).y + (boundingRect(con).height * 2 / 3);
-		xf = boundingRect(con).x + (boundingRect(con).width / 3);
+		ys = boundingRect(con).y + (boundingRect(con).height * 15 / 21);
+		xf = boundingRect(con).x + (boundingRect(con).width / 2);
 		yf = boundingRect(con).y + boundingRect(con).height;
 		break;
 	case 36:
@@ -801,12 +845,17 @@ int cutShabShab(int mode, vector<Point> con) {
 		xf = boundingRect(con).x + (boundingRect(con).width * 2 / 3);
 		yf = boundingRect(con).y + boundingRect(con).height;
 		break;
+	case 37:
+		xs = boundingRect(con).x;
+		ys = boundingRect(con).y;
+		xf = boundingRect(con).x + (boundingRect(con).width / 3);
+		yf = boundingRect(con).y + (boundingRect(con).height / 3);
+		break;
 	}
 
 	Mat temp = inputImage.colRange(xs, xf).rowRange(ys, yf).clone();
 	resize(temp, temp, Size(temp.cols * 10, temp.rows * 10), 0, 0, INTER_LINEAR);
 	threshold(temp, temp, 150, 255, THRESH_BINARY);
-
 	copyMakeBorder(temp, temp, 50, 50, 50, 50, BORDER_CONSTANT, Scalar(255, 255, 255));
 
 	Mat temp2 = temp.clone();
@@ -823,6 +872,10 @@ int cutShabShab(int mode, vector<Point> con) {
 		return (mode < 30) ? (int)concon.size() : (int)conconcon.size();
 	}
 	else {
+		/*if (concon.size() == 2) {
+			imshow("s", temp);
+			waitKey(0);
+		}*/
 		return (int)concon.size();
 	}
 }
@@ -851,9 +904,8 @@ int TwoHead(vector<Point> contr)
 		break;
 
 
-	case 2:
+	case 2: // { ฆ, ฉ, ฌ, ณ, น, ม, ห, ฮ, ฐาน(ฐ) }
 		check = cutShabShab(12, contr);
-		// { ฆ, ฌ, ณ, ห}
 		if (check == 2) {
 			//ณ
 			if (cutShabShab(32, contr) == 2)
@@ -874,7 +926,7 @@ int TwoHead(vector<Point> contr)
 		else {
 			if (cutShabShab(32, contr) == 2) {
 				//ฉ
-				if (cutShabShab(34, contr) == 1)
+				if (cutShabShab(37, contr) == 1)
 					return 8;
 				//น
 				else
@@ -883,7 +935,7 @@ int TwoHead(vector<Point> contr)
 			else
 				if (cutShabShab(34, contr) == 1)
 					//ม
-					if (cutShabShab(35, contr) == 1)
+					if (cutShabShab(35, contr) == 2)
 						return 32;
 			//ฮ
 					else
@@ -935,14 +987,17 @@ void findOverAllHole()
 		case 0:
 			a = to_string(NoHead(contr[i]));
 			putText(outputImage, a, Point(boundRect.x, boundRect.y), 1, 1, Scalar(0, 0, 255), 1.8);
+			rectangle(outputImage, boundRect, Scalar(255, 0, 0), 2);
 			break;
 		case 1:
 			a = to_string(OneHead(contr[i]));
 			putText(outputImage, a, Point(boundRect.x, boundRect.y), 1, 1, Scalar(0, 0, 255), 1.8);
+			rectangle(outputImage, boundRect, Scalar(0, 255, 0), 2);
 			break;
 		case 2:
 			a = to_string(TwoHead(contr[i]));
 			putText(outputImage, a, Point(boundRect.x, boundRect.y), 1, 1, Scalar(0, 0, 255), 1.8);
+			rectangle(outputImage, boundRect, Scalar(0, 255, 255), 2);
 			break;
 
 			//            case 3:
@@ -959,7 +1014,7 @@ int main()
 	//More accuary for big cbaracter
 	//resize(input, input, Size(input.cols * 10, input.rows * 10), 0, 0, INTER_LINEAR);
 
-	inputImage = imread("Untitled3.png");
+	inputImage = imread("test1.png");
 	outputImage = inputImage.clone();
 	threshold(inputImage, inputImage, THRESHOLD, 255, THRESH_BINARY);
 
