@@ -24,8 +24,114 @@ int passMinHorizontal(vector<Point> contr);
 int midRound(vector<Point> contr);
 int roughHead(vector<Point> contr);
 int cutShabShab(int mode, vector<Point> con);
+int vowel1(vector<Point> contr); // ิ ี ึ ื
 
 // ======================================================
+
+int cutShabShab(int mode, vector<Point> con) {
+	int xs, ys, xf, yf;
+
+	switch (mode) {
+	case 1: //check up
+		xs = boundingRect(con).x;
+		ys = boundingRect(con).y;
+		xf = boundingRect(con).x + boundingRect(con).width;
+		yf = boundingRect(con).y + (boundingRect(con).height * 55 / 100);
+		break;
+	case 11:
+		xs = boundingRect(con).x;
+		ys = boundingRect(con).y + (boundingRect(con).height * 11 / 15);
+		xf = boundingRect(con).x + boundingRect(con).width;
+		yf = boundingRect(con).y + boundingRect(con).height;
+		break;
+	case 12: case 13: //check down
+		xs = boundingRect(con).x;
+		ys = boundingRect(con).y + (boundingRect(con).height / 2);
+		xf = boundingRect(con).x + boundingRect(con).width;
+		yf = boundingRect(con).y + boundingRect(con).height;
+		break;
+	case 21:
+		xs = boundingRect(con).x;
+		ys = boundingRect(con).y + (boundingRect(con).height * 14 / 15);
+		xf = boundingRect(con).x + boundingRect(con).width;
+		yf = boundingRect(con).y + boundingRect(con).height;
+		break;
+	case 23:
+		xs = boundingRect(con).x;
+		ys = boundingRect(con).y + (boundingRect(con).height * 2 / 3);
+		xf = boundingRect(con).x + (boundingRect(con).width);
+		yf = boundingRect(con).y + boundingRect(con).height;
+		break;
+	case 31:
+		xs = boundingRect(con).x + (boundingRect(con).width * 2 / 3);
+		ys = boundingRect(con).y;
+		xf = boundingRect(con).x + boundingRect(con).width;
+		yf = boundingRect(con).y + (boundingRect(con).height / 3);
+		break;
+	case 32:
+		xs = boundingRect(con).x + (boundingRect(con).width * 2 / 3);
+		ys = boundingRect(con).y + (boundingRect(con).height * 2 / 3);
+		xf = boundingRect(con).x + boundingRect(con).width;
+		yf = boundingRect(con).y + boundingRect(con).height;
+		break;
+	case 33:
+		xs = boundingRect(con).x;
+		ys = boundingRect(con).y;
+		xf = boundingRect(con).x + (boundingRect(con).width / 2);
+		yf = boundingRect(con).y + (boundingRect(con).height / 2);
+		break;
+	case 34:
+		xs = boundingRect(con).x;
+		ys = boundingRect(con).y;
+		xf = boundingRect(con).x + (boundingRect(con).width / 4);
+		yf = boundingRect(con).y + (boundingRect(con).height / 4);
+		break;
+	case 35:
+		xs = boundingRect(con).x;
+		ys = boundingRect(con).y + (boundingRect(con).height * 15 / 21);
+		xf = boundingRect(con).x + (boundingRect(con).width / 2);
+		yf = boundingRect(con).y + boundingRect(con).height;
+		break;
+	case 36:
+		xs = boundingRect(con).x;
+		ys = boundingRect(con).y + (boundingRect(con).height * 2 / 3);
+		xf = boundingRect(con).x + (boundingRect(con).width * 2 / 3);
+		yf = boundingRect(con).y + boundingRect(con).height;
+		break;
+	case 37:
+		xs = boundingRect(con).x;
+		ys = boundingRect(con).y;
+		xf = boundingRect(con).x + (boundingRect(con).width / 3);
+		yf = boundingRect(con).y + (boundingRect(con).height / 3);
+		break;
+	}
+
+	Mat temp = inputImage.colRange(xs, xf).rowRange(ys, yf).clone();
+	resize(temp, temp, Size(temp.cols * 10, temp.rows * 10), 0, 0, INTER_LINEAR);
+	threshold(temp, temp, 150, 255, THRESH_BINARY);
+	copyMakeBorder(temp, temp, 50, 50, 50, 50, BORDER_CONSTANT, Scalar(255, 255, 255));
+
+	Mat temp2 = temp.clone();
+	cvtColor(temp2, temp2, COLOR_BGR2GRAY);
+	bitwise_not(temp2, temp2);
+	Mat temp3 = temp2.clone();
+
+	vector<vector<Point>> concon;
+	vector<vector<Point>> conconcon;
+	findContours(temp2, concon, RETR_EXTERNAL, CHAIN_APPROX_NONE);
+	findContours(temp2, conconcon, RETR_TREE, CHAIN_APPROX_NONE);
+
+	if (mode > 20) {
+		return (mode < 30) ? (int)concon.size() : (int)conconcon.size();
+	}
+	else {
+		/*if (concon.size() == 2) {
+		imshow("s", temp);
+		waitKey(0);
+		}*/
+		return (int)concon.size();
+	}
+}
 
 int roughHead(vector<Point> contr) {
 	Rect boundRect = boundingRect(contr);
@@ -291,26 +397,6 @@ int findHole(int mode, vector<Point> con)
 	}*/
 
 	return hole.size();
-}
-
-int NoHead(vector<Point> contr)
-{
-	Rect boundRect = boundingRect(contr);
-	Mat temp = inputImage(boundRect);
-
-	cvtColor(temp, temp, CV_BGR2GRAY);
-	int check = 0; // 0 is ก , 1 is ธ
-
-	for (int i = temp.rows - 1; i >= temp.rows / 2; i--)
-	{
-		if (temp.at<uchar>(i, temp.cols / 2) < THRESHOLD)
-		{
-			check = 23;
-			break;
-		}
-	}
-
-	return check;
 }
 
 int longTail(vector<Point> contr)
@@ -690,6 +776,71 @@ int passMaxHorizontal(vector<Point> contr)
 					ภ : 10, จ : 11, ข : 12, ช : 13, ค : 14, ฅ : 15, ด : 16, ต : 17, ญ = 18, ฃ = 19, ซ : 20, ท : 21*/
 }
 
+int vowel1(vector<Point> contr) // ิ ี ึ ื
+{
+	Rect boundRect = boundingRect(contr);
+	Mat temp = inputImage(boundRect);
+	cvtColor(temp, temp, CV_BGR2GRAY);
+
+	if (temp.cols < temp.rows)
+		return 14;
+
+	if (passHorizontalCount(contr, 0) == 2)
+		return 49;
+
+	bool chk = true;
+	for (int i = temp.cols - 1; i >= temp.cols * 2 / 3; i--)
+	{
+		if (temp.at<uchar>(0, i) < THRESHOLD)
+			chk = false;
+	}
+
+	if (chk)
+		return 46;
+
+	Mat temp1 = temp.rowRange(0, temp.rows - 1).colRange(temp.cols * 2 / 3, temp.cols - 1);
+	vector<vector<Point>> hole;
+	findContours(temp1, hole, RETR_TREE, CHAIN_APPROX_NONE);
+
+	if (hole.size() == 3)
+		return 48;
+
+	return 47;
+}
+
+int NoHead(vector<Point> contr)
+{
+	Rect boundRect = boundingRect(contr);
+	Mat temp = inputImage(boundRect);
+
+	cvtColor(temp, temp, CV_BGR2GRAY);
+	int check = 0; // 0 is ก , 23 is ธ, 45 is า
+
+	for (int i = temp.rows - 1; i >= temp.rows / 2; i--)
+	{
+		if (temp.at<uchar>(i, temp.cols / 2) < THRESHOLD)
+		{
+			check = 23;
+			break;
+		}
+	}
+
+	if (check == 0)
+	{
+		check = 45;
+		for (int i = 0; i < temp.cols / 2; i++)
+		{
+			if (temp.at<uchar>(temp.rows / 2, i) < THRESHOLD)
+			{
+				check = 0;
+				break;
+			}
+		}
+	}
+
+	return check;
+}
+
 int OneHead(vector<Point> contr)
 {
 	int up = findHole(UP, contr);
@@ -708,16 +859,51 @@ int OneHead(vector<Point> contr)
 		if (buffer == 1)
 			check = 30;
 		else if (buffer == 2)
-			check = 28;
+			if (temp.at<uchar>(temp.rows / 2, temp.cols - 1) < THRESHOLD)
+				check = 28;
+			else
+				check = 52;
 		else if (buffer == 0)
 			check = 26;
 	}
 	else if ((buffer = passOneHorizontal(contr)) != -1) // ร ว : 1 0
 	{
 		if (buffer == 1)
-			check = 34;
+			if (temp.at<uchar>(temp.rows / 2, temp.cols - 1) < THRESHOLD)
+				check = 50;
+			else if (temp.cols * 2.2 <= temp.rows)
+			{
+				int max = 0;
+				for (int j = 0; j < temp.rows; j++)
+				{
+					int black = -1;
+					int count = 0;
+					for (int i = 0; i < temp.cols; i++)
+					{
+						if (temp.at<uchar>(j, i) < THRESHOLD && (black == -1 || black == 0))
+						{
+							black = 1;
+							count++;
+						}
+						else if (temp.at<uchar>(j, i) >= THRESHOLD)
+							black = 0;
+					}
+					if (count > max)
+						max = count;
+				}
+
+				if (max == 2)
+					check = 53;
+				else
+					check = 55;
+			}
+			else
+				check = 34;
 		else if (buffer == 0)
-			check = 36;
+			if (temp.at<uchar>(temp.rows / 2, temp.cols - 1) < THRESHOLD)
+				check = 36;
+			else
+				check = 56;
 	}
 	else if (temp.at<uchar>(temp.rows / 2, 0) < THRESHOLD && temp.at<uchar>(temp.rows - 1, 0) < THRESHOLD) // ผ
 	{
@@ -731,7 +917,10 @@ int OneHead(vector<Point> contr)
 		else if (buffer == 1)
 			check = 29;
 		else if (buffer == 2)
-			check = 6;
+			if (passVerticalCount(contr, 0.25) == 2)
+				check = 54;
+			else
+				check = 6;
 		else if (buffer == 3)
 			check = 33;
 		else if (buffer == 4)
@@ -741,13 +930,19 @@ int OneHead(vector<Point> contr)
 		else if (buffer == 6)
 			check = 15;
 		else if (buffer == 7)
-			check = 21;
+			if (passHorizontalCount(contr, 4.0 / 5.0) == 1)
+				check = 57;
+			else
+				check = 21;
 		else if (buffer == 8)
 			check = 25;
 		else if (buffer == 9)
-			check = 100;
+			check = 44;
 		else if (buffer == 10)
-			check = 31;
+			if (passHorizontalCount(contr, 4.0 / 5.0) == 1)
+				check = 59;
+			else
+				check = 31;
 		else if (buffer == 11)
 			check = 7;
 		else if (buffer == 12)
@@ -775,111 +970,6 @@ int OneHead(vector<Point> contr)
 	return check;
 }
 
-int cutShabShab(int mode, vector<Point> con) {
-	int xs, ys, xf, yf;
-
-	switch (mode) {
-	case 1: //check up
-		xs = boundingRect(con).x;
-		ys = boundingRect(con).y;
-		xf = boundingRect(con).x + boundingRect(con).width;
-		yf = boundingRect(con).y + (boundingRect(con).height * 55 / 100);
-		break;
-	case 11:
-		xs = boundingRect(con).x;
-		ys = boundingRect(con).y + (boundingRect(con).height * 11 / 15);
-		xf = boundingRect(con).x + boundingRect(con).width;
-		yf = boundingRect(con).y + boundingRect(con).height;
-		break;
-	case 12: case 13: //check down
-		xs = boundingRect(con).x;
-		ys = boundingRect(con).y + (boundingRect(con).height / 2);
-		xf = boundingRect(con).x + boundingRect(con).width;
-		yf = boundingRect(con).y + boundingRect(con).height;
-		break;
-	case 21:
-		xs = boundingRect(con).x;
-		ys = boundingRect(con).y + (boundingRect(con).height * 14 / 15);
-		xf = boundingRect(con).x + boundingRect(con).width;
-		yf = boundingRect(con).y + boundingRect(con).height;
-		break;
-	case 23:
-		xs = boundingRect(con).x;
-		ys = boundingRect(con).y + (boundingRect(con).height * 2 / 3);
-		xf = boundingRect(con).x + (boundingRect(con).width);
-		yf = boundingRect(con).y + boundingRect(con).height;
-		break;
-	case 31:
-		xs = boundingRect(con).x + (boundingRect(con).width * 2 / 3);
-		ys = boundingRect(con).y;
-		xf = boundingRect(con).x + boundingRect(con).width;
-		yf = boundingRect(con).y + (boundingRect(con).height / 3);
-		break;
-	case 32:
-		xs = boundingRect(con).x + (boundingRect(con).width * 2 / 3);
-		ys = boundingRect(con).y + (boundingRect(con).height * 2 / 3);
-		xf = boundingRect(con).x + boundingRect(con).width;
-		yf = boundingRect(con).y + boundingRect(con).height;
-		break;
-	case 33:
-		xs = boundingRect(con).x;
-		ys = boundingRect(con).y;
-		xf = boundingRect(con).x + (boundingRect(con).width / 2);
-		yf = boundingRect(con).y + (boundingRect(con).height / 2);
-		break;
-	case 34:
-		xs = boundingRect(con).x;
-		ys = boundingRect(con).y;
-		xf = boundingRect(con).x + (boundingRect(con).width / 4);
-		yf = boundingRect(con).y + (boundingRect(con).height / 4);
-		break;
-	case 35:
-		xs = boundingRect(con).x;
-		ys = boundingRect(con).y + (boundingRect(con).height * 15 / 21);
-		xf = boundingRect(con).x + (boundingRect(con).width / 2);
-		yf = boundingRect(con).y + boundingRect(con).height;
-		break;
-	case 36:
-		xs = boundingRect(con).x;
-		ys = boundingRect(con).y + (boundingRect(con).height * 2 / 3);
-		xf = boundingRect(con).x + (boundingRect(con).width * 2 / 3);
-		yf = boundingRect(con).y + boundingRect(con).height;
-		break;
-	case 37:
-		xs = boundingRect(con).x;
-		ys = boundingRect(con).y;
-		xf = boundingRect(con).x + (boundingRect(con).width / 3);
-		yf = boundingRect(con).y + (boundingRect(con).height / 3);
-		break;
-	}
-
-	Mat temp = inputImage.colRange(xs, xf).rowRange(ys, yf).clone();
-	resize(temp, temp, Size(temp.cols * 10, temp.rows * 10), 0, 0, INTER_LINEAR);
-	threshold(temp, temp, 150, 255, THRESH_BINARY);
-	copyMakeBorder(temp, temp, 50, 50, 50, 50, BORDER_CONSTANT, Scalar(255, 255, 255));
-
-	Mat temp2 = temp.clone();
-	cvtColor(temp2, temp2, COLOR_BGR2GRAY);
-	bitwise_not(temp2, temp2);
-	Mat temp3 = temp2.clone();
-
-	vector<vector<Point>> concon;
-	vector<vector<Point>> conconcon;
-	findContours(temp2, concon, RETR_EXTERNAL, CHAIN_APPROX_NONE);
-	findContours(temp2, conconcon, RETR_TREE, CHAIN_APPROX_NONE);
-
-	if (mode > 20) {
-		return (mode < 30) ? (int)concon.size() : (int)conconcon.size();
-	}
-	else {
-		/*if (concon.size() == 2) {
-			imshow("s", temp);
-			waitKey(0);
-		}*/
-		return (int)concon.size();
-	}
-}
-
 int TwoHead(vector<Point> contr)
 {
 	Rect boundRect = boundingRect(contr);
@@ -892,7 +982,7 @@ int TwoHead(vector<Point> contr)
 			if (cutShabShab(21, contr) == 2) //ฎ
 				return 13;
 			else //ฏ
-				return 14;
+				return vowel1(contr);
 			break;
 		default:
 			if (cutShabShab(36, contr) == 2) //ส
@@ -1007,14 +1097,13 @@ void findOverAllHole()
 	}
 }
 
-
 int main()
 {
 	ios_base::sync_with_stdio(false);
 	//More accuary for big cbaracter
 	//resize(input, input, Size(input.cols * 10, input.rows * 10), 0, 0, INTER_LINEAR);
 
-	inputImage = imread("test1.png");
+	inputImage = imread("test3.png");
 	outputImage = inputImage.clone();
 	threshold(inputImage, inputImage, THRESHOLD, 255, THRESH_BINARY);
 
