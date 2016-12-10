@@ -382,8 +382,6 @@ int findHole(int mode, vector<Point> con)
 	bitwise_not(temp, temp);
 	temp = temp.colRange(xs, xf).rowRange(ys, yf);
 
-	//imshow("temp1", temp);
-
 	findContours(temp, hole, RETR_TREE, CHAIN_APPROX_NONE);
 	cvtColor(temp, temp, CV_GRAY2BGR);
 
@@ -861,8 +859,10 @@ int OneHead(vector<Point> contr)
 		else if (buffer == 2)
 			if (temp.at<uchar>(temp.rows / 2, temp.cols - 1) < THRESHOLD)
 				check = 28;
-			else
+			else if (temp.rows > temp.cols)
 				check = 52;
+			else
+				check = 47;
 		else if (buffer == 0)
 			check = 26;
 	}
@@ -937,7 +937,10 @@ int OneHead(vector<Point> contr)
 		else if (buffer == 8)
 			check = 25;
 		else if (buffer == 9)
-			check = 44;
+			if (passVerticalCount(contr, 0.5) == 1)
+				check = 44;
+			else
+				check = vowel1(contr);
 		else if (buffer == 10)
 			if (passHorizontalCount(contr, 4.0 / 5.0) == 1)
 				check = 59;
@@ -1076,18 +1079,18 @@ void findOverAllHole()
 			//                break;
 		case 0:
 			a = to_string(NoHead(contr[i]));
-			putText(outputImage, a, Point(boundRect.x, boundRect.y), 1, 1, Scalar(0, 0, 255), 1.8);
 			rectangle(outputImage, boundRect, Scalar(255, 0, 0), 2);
+			putText(outputImage, a, Point(boundRect.x, boundRect.y), 1, 1, Scalar(0, 0, 255), 1.8);
 			break;
 		case 1:
 			a = to_string(OneHead(contr[i]));
-			putText(outputImage, a, Point(boundRect.x, boundRect.y), 1, 1, Scalar(0, 0, 255), 1.8);
 			rectangle(outputImage, boundRect, Scalar(0, 255, 0), 2);
+			putText(outputImage, a, Point(boundRect.x, boundRect.y), 1, 1, Scalar(0, 0, 255), 1.8);
 			break;
 		case 2:
 			a = to_string(TwoHead(contr[i]));
-			putText(outputImage, a, Point(boundRect.x, boundRect.y), 1, 1, Scalar(0, 0, 255), 1.8);
 			rectangle(outputImage, boundRect, Scalar(0, 255, 255), 2);
+			putText(outputImage, a, Point(boundRect.x, boundRect.y), 1, 1, Scalar(0, 0, 255), 1.8);
 			break;
 
 			//            case 3:
@@ -1103,7 +1106,7 @@ int main()
 	//More accuary for big cbaracter
 	//resize(input, input, Size(input.cols * 10, input.rows * 10), 0, 0, INTER_LINEAR);
 
-	inputImage = imread("test3.png");
+	inputImage = imread("test6.png");
 	outputImage = inputImage.clone();
 	threshold(inputImage, inputImage, THRESHOLD, 255, THRESH_BINARY);
 
