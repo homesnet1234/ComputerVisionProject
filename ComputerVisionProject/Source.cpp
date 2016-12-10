@@ -5,7 +5,7 @@
 using namespace std;
 using namespace cv;
 
-Mat inputImage;
+Mat inputImage, outputImage;
 enum { NONE, UP, DOWN, LEFT, RIGHT };
 
 // ============= Protoype ================================
@@ -21,8 +21,198 @@ int OneHead(vector<Point> contr);
 int TwoHead(vector<Point> contr);
 void findOverAllHole();
 int passMinHorizontal(vector<Point> contr);
+int midRound(vector<Point> contr);
+int roughHead(vector<Point> contr);
 
 // ======================================================
+
+int roughHead(vector<Point> contr) {
+	Rect boundRect = boundingRect(contr);
+
+	Mat temp = inputImage(boundRect);
+	cvtColor(temp, temp, CV_BGR2GRAY);
+	int check = -1; //-1 is not this type : 0 is ฃ,1 is ซ, 2 is ท
+	bool black = true;
+	int countHead = 0;
+	int countMiddle = 0;
+	int countLow = 0;
+
+	//Find specific type
+	for (int i = 0; i <= temp.cols / 3; i++)
+	{
+		if (temp.at<uchar>((int)(temp.rows*0.15), i) > THRESHOLD && !black)
+		{
+			black = true;
+		}
+		else if (temp.at<uchar>((int)(temp.rows*0.15), i) < THRESHOLD && black)
+		{
+			black = false;
+			countHead++;
+		}
+	}
+
+	black = true;
+	for (int i = 0; i <= (int)(temp.cols*0.3); i++)
+	{
+		if (temp.at<uchar>((int)(temp.rows*0.6), i) > THRESHOLD && !black)
+		{
+			black = true;
+		}
+		else if (temp.at<uchar>((int)(temp.rows*0.6), i) < THRESHOLD && black)
+		{
+			black = false;
+			countMiddle++;
+		}
+	}
+
+	black = true;
+	for (int i = 0; i <= (int)(temp.cols - 1); i++)
+	{
+		if (temp.at<uchar>((int)(temp.rows*0.8), i) > THRESHOLD && !black)
+		{
+			black = true;
+		}
+		else if (temp.at<uchar>((int)(temp.rows*0.8), i) < THRESHOLD && black)
+		{
+			black = false;
+			countLow++;
+		}
+	}
+
+	//Specified
+	if (countHead == 2 && countLow == 2)
+	{
+		if (countMiddle == 1) {
+			black = true;
+			int tbTest = 0;
+			for (int i = 0; i <= (int)(temp.cols / 2); i++)
+			{
+				if (temp.at<uchar>((int)(temp.rows*0.5), i) > THRESHOLD && !black)
+				{
+					black = true;
+				}
+				else if (temp.at<uchar>((int)(temp.rows*0.8), i) < THRESHOLD && black)
+				{
+					black = false;
+					tbTest++;
+				}
+			}
+			if (tbTest == 2)
+				check = 2;
+
+		}
+		else {
+			int ccTest = 0;
+			if (temp.at<uchar>((int)(temp.rows*0.22), (int)(temp.cols*0.98)) < THRESHOLD)
+				ccTest++;
+
+			if (ccTest == 1) {
+				check = 0;
+
+			}
+			else
+				check = 1;
+
+		}
+	}
+	return check;
+} //-1 is not this type : 0 is ฃ,1 is ซ, 2 is ท
+
+int midRound(vector<Point> contr) {
+	Rect boundRect = boundingRect(contr);
+
+	Mat temp = inputImage(boundRect);
+	cvtColor(temp, temp, CV_BGR2GRAY);
+	int check = -1; //-1 is not this type : 0 is ข,1 is ช, 2 is ค, 3 is ต, 4 is ด, 5 is ต, 6 is ญ
+	bool black = true;
+	int countMidHead = 0;
+	int countHead = 0;
+	int countLow = 0;
+
+	//Find specific type
+	for (int i = (int)(temp.cols*0.0); i <= (int)(temp.cols - 1); i++)
+	{
+		if (temp.at<uchar>((int)(temp.rows*0.00), i) > THRESHOLD && !black)
+		{
+			black = true;
+		}
+		else if (temp.at<uchar>((int)(temp.rows*0.00), i) < THRESHOLD && black)
+		{
+			black = false;
+			countHead++;
+		}
+	}
+	//putText(inputImage, to_string(countHead), Point(boundRect.x, boundRect.y), 1, 2, Scalar(0, 0, 255), 2);
+
+	black = true;
+	for (int i = (int)(temp.cols*0.3); i <= (int)(temp.cols*0.7); i++)
+	{
+		if (temp.at<uchar>((int)(temp.rows*0.45), i) > THRESHOLD && !black)
+		{
+			black = true;
+		}
+		else if (temp.at<uchar>((int)(temp.rows*0.45), i) < THRESHOLD && black)
+		{
+			black = false;
+			countMidHead++;
+		}
+	}
+
+	//putText(inputImage, to_string(countMidHead), Point(boundRect.x, boundRect.y), 1, 2, Scalar(0, 0, 255), 2);
+
+	black = true;
+	for (int i = (int)(temp.cols*0.0); i <= (int)(temp.cols*0.7); i++)
+	{
+		if (temp.at<uchar>((int)(temp.rows*0.75), i) > THRESHOLD && !black)
+		{
+			black = true;
+		}
+		else if (temp.at<uchar>((int)(temp.rows*0.75), i) < THRESHOLD && black)
+		{
+			black = false;
+			countLow++;
+		}
+	}
+
+	//putText(inputImage, to_string(countLow), Point(boundRect.x, boundRect.y), 1, 2, Scalar(0, 0, 255), 2);
+
+	if (countMidHead == 1) {
+		if (countHead == 1) {
+			if (countLow == 3) {
+				check = 6; //ญ
+			}
+			else {
+				int ccTest = 0;
+				if (temp.at<uchar>((int)(temp.rows*0.22), (int)(temp.cols*0.98)) < THRESHOLD)
+					ccTest++;
+
+				if (ccTest == 1) {
+					check = 0; //ข
+				}
+				else
+					check = 1; //ฃ
+			}
+
+			//putText(inputImage, to_string(check), Point(boundRect.x, boundRect.y), 1, 2, Scalar(0, 0, 255), 2);
+		}
+	}
+	else if (countMidHead == 2) {
+		if (countLow == 1) {
+			if (countHead == 1)
+				check = 2; //ค
+			else
+				check = 3; //ต
+		}
+		else {
+			if (countHead == 1)
+				check = 4; //ด
+			else
+				check = 5; //ต
+		}
+	}
+
+	return check;
+} //0 is ข, 1 is ช, 2 is ค, 3 is ต, 4 is ด, 5 is ต, 6 is ญ
 
 int findHole(int mode, vector<Point> con)
 {
@@ -75,7 +265,6 @@ int NoHead(vector<Point> contr)
 	Rect boundRect = boundingRect(contr);
 	Mat temp = inputImage(boundRect);
 
-	rectangle(inputImage, boundRect, Scalar(0, 0, 255), 2);
 	cvtColor(temp, temp, CV_BGR2GRAY);
 	int check = 0; // 0 is ก , 1 is ธ
 
@@ -83,11 +272,11 @@ int NoHead(vector<Point> contr)
 	{
 		if (temp.at<uchar>(i, temp.cols / 2) < THRESHOLD)
 		{
-			check = 1;
+			check = 23;
 			break;
 		}
 	}
-	
+
 	return check;
 }
 
@@ -300,7 +489,7 @@ int passMaxVertical(vector<Point> contr)
 		//rectangle(inputImage, boundRect, Scalar(255, 255, 0), 2, LINE_8, 0);
 		break;
 	case 4:
-		switch (passVerticalCount(contr, 3.0 / 4.0)) 
+		switch (passVerticalCount(contr, 3.0 / 4.0))
 		{
 		case 1: // ย
 			check = 0;
@@ -319,7 +508,7 @@ int passMaxVertical(vector<Point> contr)
 			}
 			break;
 		case 3: // ฐ
-			check = 4;
+			check = 3;
 			//rectangle(inputImage, boundRect, Scalar(255, 255, 0), 2, LINE_8, 0);
 			break;
 		}
@@ -332,7 +521,7 @@ int passMaxVertical(vector<Point> contr)
 		check = -1;
 	}
 
-	return check; // ย : 0, อ : 1, จ : 2 ฐ : 3, ถ = 4, บ = 5, ญ ั = 6, ภ : 7, จ : 8
+	return check; // ย : 0, อ : 1, ล : 2 ฐ : 3, ถ = 4, บ = 5, ญ ั = 6, ภ : 7, จ : 8
 }
 
 int passMaxHorizontal(vector<Point> contr)
@@ -367,45 +556,82 @@ int passMaxHorizontal(vector<Point> contr)
 		check = 2;
 		//rectangle(inputImage, boundRect, Scalar(255, 255, 0), 2, LINE_8, 0);
 		break;
-	case 3:
-		switch (passMaxVertical(contr)) // ย : 0, อ : 1, จ : 2 ฐ : 3, ถ = 4, บ = 5, ญ ั = 6, ภ : 7, จ : 8
+	case 3: // ย : 0, อ : 1, ล : 2, ฐ : 3, ถ : 4, บ : 5, ญ ั : 6, ภ : 7, จ : 8
+		switch (passMaxVertical(contr))
 		{
 		case 0:
-			check = 5;
+			check = 3;
 			break;
 		case 1:
-			check = 6;
+			check = 4;
 			break;
 		case 2:
-			check = 7;
+			check = 5;
 			break;
 		case 3:
-			check = 8;
+			check = 6;
 			break;
 		case 4:
-			check = 9;
+			check = 7;
 			break;
 		case 5:
-			check = 10;
+			check = 8;
 			break;
 		case 6:
-			check = 11;
+			check = 9;
 			break;
 		case 7:
-			check = 12;
+			check = 10;
 			break;
 		case 8:
-			check = 13;
+			check = 11;
 			break;
 		default:
 			check = -1;
 		}
-		check = 9;
-		//rectangle(inputImage, boundRect, Scalar(255, 255, 0), 2, LINE_8, 0);
+		//rectangle(outputImage, boundRect, Scalar(255, 255, 0), 2, LINE_8, 0);
 		break;
-	case 4:
-		rectangle(inputImage, boundRect, Scalar(255, 255, 0), 2, LINE_8, 0);
-		check = 20;
+	case 4: //0 is ข, 1 is ช, 2 is ค, 3 is ฅ, 4 is ด, 5 is ต, 6 is ญ
+		//rectangle(outputImage, boundRect, Scalar(255, 255, 0), 2, LINE_8, 0);
+		switch (roughHead(contr)) // ฃ : 0, ซ = 1, ท = 2
+		{
+		case 0:
+			check = 19;
+			break;
+		case 1:
+			check = 20;
+			break;
+		case 2:
+			check = 21;
+			break;
+		default:
+			switch (midRound(contr))
+			{
+			case 0:
+				check = 12;
+				break;
+			case 1:
+				check = 13;
+				break;
+			case 2:
+				check = 14;
+				break;
+			case 3:
+				check = 15;
+				break;
+			case 4:
+				check = 16;
+				break;
+			case 5:
+				check = 17;
+				break;
+			case 6:
+				check = 18;
+				break;
+			default:
+				check = -1;
+			}
+		}
 		break;
 	case 5: // พ : 4, ฑ : 3
 		if (passHorizontalCount(contr, 3.0 / 4.0) == 3)
@@ -416,8 +642,8 @@ int passMaxHorizontal(vector<Point> contr)
 	default:
 		check = -1;
 	}
-
-	return check; // ฑ : 0, พ : 1, ง : 2, ฑ : 3, พ : 4, ย : 5, อ : 6, จ : 7 ฐ : 8, ถ = 9, บ = 10, ญ ั = 11, ภ : 12, จ : 13
+	return check;	/*ฑ : 0, พ : 1, ง : 2, ย : 3, อ : 4, ล : 5 ฐ : 6, ถ = 7, บ = 8, ญ ั = 9,
+					ภ : 10, จ : 11, ข : 12, ช : 13, ค : 14, ฅ : 15, ด : 16, ต : 17, ญ = 18, ฃ = 19, ซ : 20, ท : 21*/
 }
 
 int OneHead(vector<Point> contr)
@@ -431,34 +657,78 @@ int OneHead(vector<Point> contr)
 	cvtColor(temp, temp, CV_BGR2GRAY);
 
 	int check = -1;
+	int buffer;
 
-	if ((check = longTail(contr)) != -1) // ป ฝ ฟ : 0 2 1
+	if ((buffer = longTail(contr)) != -1) // ป ฝ ฟ : 0 2 1
 	{
-		if (check == 1)
-			rectangle(inputImage, boundRect, Scalar(0, 0, 255), 2);
-		if (check == 2)
-			rectangle(inputImage, boundRect, Scalar(0, 0, 255), 2);
-		if (check == 0)
-			rectangle(inputImage, boundRect, Scalar(0, 0, 255), 2);
+		if (buffer == 1)
+			check = 30;
+		else if (buffer == 2)
+			check = 28;
+		else if (buffer == 0)
+			check = 26;
 	}
-	else if ((check = passOneHorizontal(contr)) != -1) // ร ว : 1 0
+	else if ((buffer = passOneHorizontal(contr)) != -1) // ร ว : 1 0
 	{
-		if (check == 1)
-			rectangle(inputImage, boundRect, Scalar(0, 0, 255), 2);
-		if (check == 0)
-			rectangle(inputImage, boundRect, Scalar(0, 0, 255), 2);
+		if (buffer == 1)
+			check = 34;
+		else if (buffer == 0)
+			check = 36;
 	}
 	else if (temp.at<uchar>(temp.rows / 2, 0) < THRESHOLD && temp.at<uchar>(temp.rows - 1, 0) < THRESHOLD) // ผ
 	{
-		rectangle(inputImage, boundRect, Scalar(0, 0, 255), 2);
+		check = 27;
 	}
-	else if ((check = passMaxHorizontal(contr)) != -1) // ฑ : 0, พ : 1, ง : 2, ฑ : 3, พ : 4, ย : 5, อ : 6, จ : 7 ฐ : 8, ถ = 9, บ = 10, ญ ั = 11, ภ : 12, จ : 13
+	else if ((buffer = passMaxHorizontal(contr)) != -1) /*ฑ : 0, พ : 1, ง : 2, ย : 3, อ : 4, ล : 5, ฐ : 6, ถ = 7, บ = 8, ญ ั = 9,
+														ภ : 10, จ : 11, ข : 12, ช : 13, ค : 14, ฅ : 15, ด : 16, ต : 17, ญ = 18, ฃ = 19, ซ : 20, ท : 21*/
 	{
-		if (check >= 0 && check <= 13)
-			rectangle(inputImage, boundRect, Scalar(0, 0, 255), 2);
+		if (buffer == 0)
+			check = 16;
+		else if (buffer == 1)
+			check = 29;
+		else if (buffer == 2)
+			check = 6;
+		else if (buffer == 3)
+			check = 33;
+		else if (buffer == 4)
+			check = 42;
+		else if (buffer == 5)
+			check = 35;
+		else if (buffer == 6)
+			check = 15;
+		else if (buffer == 7)
+			check = 21;
+		else if (buffer == 8)
+			check = 25;
+		else if (buffer == 9)
+			check = 100;
+		else if (buffer == 10)
+			check = 31;
+		else if (buffer == 11)
+			check = 7;
+		else if (buffer == 12)
+			check = 1;
+		else if (buffer == 13)
+			check = 9;
+		else if (buffer == 14)
+			check = 3;
+		else if (buffer == 15)
+			check = 4;
+		else if (buffer == 16)
+			check = 19;
+		else if (buffer == 17)
+			check = 20;
+		else if (buffer == 18)
+			check = 12;
+		else if (buffer == 19)
+			check = 2;
+		else if (buffer == 20)
+			check = 10;
+		else if (buffer == 21)
+			check = 22;
 	}
 
-	return -1;
+	return check;
 }
 
 int TwoHead(vector<Point> contr)
@@ -478,17 +748,20 @@ void findOverAllHole()
 	for (int i = 0; i < contr.size(); i++)
 	{
 		int overall = findHole(NONE, contr[i]) - 1;
-
+		Rect boundRect = boundingRect(contr[i]);
+		string a;
 		switch (overall)
 		{
 			//            case 1:
 			//                rectangle(input,boundingRect(contr[i]),Scalar(0,255,0),1,LINE_8,0);
 			//                break;
 		case 0:
-			NoHead(contr[i]);
+			a = to_string(NoHead(contr[i]));
+			putText(outputImage, a, Point(boundRect.x, boundRect.y), 1, 1, Scalar(0, 0, 255), 1.8);
 			break;
 		case 1:
-			OneHead(contr[i]);
+			a = to_string(OneHead(contr[i]));
+			putText(outputImage, a, Point(boundRect.x, boundRect.y), 1, 1, Scalar(0, 0, 255), 1.8);
 			break;
 		case 2:
 			TwoHead(contr[i]);
@@ -509,9 +782,11 @@ int main()
 	//resize(input, input, Size(input.cols * 10, input.rows * 10), 0, 0, INTER_LINEAR);
 
 	inputImage = imread("Untitled.png");
+	outputImage = inputImage.clone();
 	threshold(inputImage, inputImage, THRESHOLD, 255, THRESH_BINARY);
 
 	findOverAllHole();
 	imshow("thai catch", inputImage);
+	imshow("output", outputImage);
 	waitKey(0);
 }
