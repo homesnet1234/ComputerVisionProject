@@ -1,4 +1,5 @@
 ﻿#include <iostream>
+#include <fstream>
 #include <vector>
 #include <queue>
 #include "opencv2/opencv.hpp"
@@ -7,11 +8,13 @@
 using namespace std;
 using namespace cv;
 
-class Character 
+class Character
 {
 public:
 	int label;
 	Rect boundRect;
+
+	Character() {}
 
 	Character(int label, Rect boundRect)
 	{
@@ -20,7 +23,7 @@ public:
 	}
 };
 
-class Cmp 
+class Cmp
 {
 public:
 	bool operator () (const Character &a, const Character &b)
@@ -41,7 +44,6 @@ int passMaxHorizontal(vector<Point> contr);
 int OneHead(vector<Point> contr);
 int TwoHead(vector<Point> contr);
 void findOverAllHole();
-int passMinHorizontal(vector<Point> contr);
 int midRound(vector<Point> contr);
 int roughHead(vector<Point> contr);
 int cutShabShab(int mode, vector<Point> con);
@@ -956,7 +958,19 @@ int OneHead(vector<Point> contr)
 			else
 				check = 6;
 		else if (buffer == 3)
-			check = 33;
+			if (passHorizontalCount(contr, 0.8) == 1)
+				check = 59;
+			else
+			{
+				check = 33;
+				for (int i = 0; i < temp.rows / 3; i++)
+				{
+					if (temp.at<uchar>(i, temp.cols / 2) < THRESHOLD)
+					{
+						check = 31;
+					}
+				}
+			}
 		else if (buffer == 4)
 			check = 42;
 		else if (buffer == 5)
@@ -1173,13 +1187,19 @@ void findOverAllHole()
 	}
 }
 
-int main()
+int main(int argc, char** argv)
 {
 	ios_base::sync_with_stdio(false);
+
 	//More accuary for big cbaracter
 	//resize(input, input, Size(input.cols * 10, input.rows * 10), 0, 0, INTER_LINEAR);
+	vector<Character> buffer;
 
-	inputImage = imread("test5.png");
+	if (argc == 1)
+		//inputImage = imread("test.png");
+		return -1;
+	else
+		inputImage = imread(argv[1]);
 	outputImage = inputImage.clone();
 	threshold(inputImage, inputImage, THRESHOLD, 255, THRESH_BINARY);
 
@@ -1188,8 +1208,26 @@ int main()
 	while (!pq.empty())
 	{
 		cout << pq.top().label << endl;
+		buffer.push_back(pq.top());
 		pq.pop();
 	}
+
+	ofstream file;
+	file.open("text.txt");
+
+	Character before;
+	for (int i = 0; i < buffer.size(); i++)
+	{
+		if (buffer[i].label == 25 && before.label == 25)
+		{
+			if (buffer[i].boundRect.x <= before.boundRect.x + before.boundRect.width)
+				buffer[i].label = 51;
+		}
+		file << buffer[i].label << endl;
+		before = buffer[i];
+	}
+
+	file.close();
 
 	imshow("thai catch", inputImage);
 	imshow("output", outputImage);
