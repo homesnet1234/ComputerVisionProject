@@ -3,15 +3,19 @@ c:\opencv\build\include\opencv2\core\mat.hpp(1965): warning C4819: The file cont
 c:\opencv\build\include\opencv2\core\persistence.hpp : warning C4819: The file contains a character that cannot be represented in the current code page (932). Save the file in Unicode format to prevent data loss
 c:\opencv\build\include\opencv2\core\utility.hpp : warning C4819: The file contains a character that cannot be represented in the current code page (932). Save the file in Unicode format to prevent data loss
 c:\opencv\build\include\opencv2\core\utility.hpp : warning C4819: The file contains a character that cannot be represented in the current code page (932). Save the file in Unicode format to prevent data loss
-c:\users\magic\documents\visual studio 2015\projects\computervisionproject\computervisionproject\source.cpp(397): warning C4267: 'return': conversion from 'size_t' to 'int', possible loss of data
-c:\users\magic\documents\visual studio 2015\projects\computervisionproject\computervisionproject\source.cpp(522): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-c:\users\magic\documents\visual studio 2015\projects\computervisionproject\computervisionproject\source.cpp(527): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-c:\users\magic\documents\visual studio 2015\projects\computervisionproject\computervisionproject\source.cpp(545): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-c:\users\magic\documents\visual studio 2015\projects\computervisionproject\computervisionproject\source.cpp(550): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-c:\users\magic\documents\visual studio 2015\projects\computervisionproject\computervisionproject\source.cpp(933): warning C4305: 'argument': truncation from 'double' to 'float'
-c:\users\magic\documents\visual studio 2015\projects\computervisionproject\computervisionproject\source.cpp(945): warning C4305: 'argument': truncation from 'double' to 'float'
-c:\users\magic\documents\visual studio 2015\projects\computervisionproject\computervisionproject\source.cpp(1083): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
-c:\users\magic\documents\visual studio 2015\projects\computervisionproject\computervisionproject\source.cpp(1088): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
-c:\users\magic\documents\visual studio 2015\projects\computervisionproject\computervisionproject\source.cpp(1093): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+c:\users\magic\documents\visual studio 2015\projects\computervisionproject\computervisionproject\source.cpp(421): warning C4267: 'return': conversion from 'size_t' to 'int', possible loss of data
+c:\users\magic\documents\visual studio 2015\projects\computervisionproject\computervisionproject\source.cpp(546): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+c:\users\magic\documents\visual studio 2015\projects\computervisionproject\computervisionproject\source.cpp(551): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+c:\users\magic\documents\visual studio 2015\projects\computervisionproject\computervisionproject\source.cpp(569): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+c:\users\magic\documents\visual studio 2015\projects\computervisionproject\computervisionproject\source.cpp(574): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+c:\users\magic\documents\visual studio 2015\projects\computervisionproject\computervisionproject\source.cpp(845): warning C4305: 'argument': truncation from 'double' to 'float'
+c:\users\magic\documents\visual studio 2015\projects\computervisionproject\computervisionproject\source.cpp(967): warning C4305: 'argument': truncation from 'double' to 'float'
+c:\users\magic\documents\visual studio 2015\projects\computervisionproject\computervisionproject\source.cpp(984): warning C4305: 'argument': truncation from 'double' to 'float'
+c:\users\magic\documents\visual studio 2015\projects\computervisionproject\computervisionproject\source.cpp(1048): warning C4305: 'argument': truncation from 'double' to 'float'
+c:\users\magic\documents\visual studio 2015\projects\computervisionproject\computervisionproject\source.cpp(1141): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+c:\users\magic\documents\visual studio 2015\projects\computervisionproject\computervisionproject\source.cpp(1148): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+c:\users\magic\documents\visual studio 2015\projects\computervisionproject\computervisionproject\source.cpp(1155): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+c:\users\magic\documents\visual studio 2015\projects\computervisionproject\computervisionproject\source.cpp(1162): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+c:\users\magic\documents\visual studio 2015\projects\computervisionproject\computervisionproject\source.cpp(1167): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
   ComputerVisionProject.vcxproj -> C:\Users\Magic\documents\visual studio 2015\Projects\ComputerVisionProject\x64\Debug\ComputerVisionProject.exe
   ComputerVisionProject.vcxproj -> C:\Users\Magic\documents\visual studio 2015\Projects\ComputerVisionProject\x64\Debug\ComputerVisionProject.pdb (Full PDB)

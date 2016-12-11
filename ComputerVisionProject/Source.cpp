@@ -1,12 +1,33 @@
 ﻿#include <iostream>
+#include <vector>
+#include <queue>
 #include "opencv2/opencv.hpp"
 #define endl '\n'
 #define THRESHOLD 100
 using namespace std;
 using namespace cv;
 
-Mat inputImage, outputImage;
-enum { NONE, UP, DOWN, LEFT, RIGHT };
+class Character 
+{
+public:
+	int label;
+	Rect boundRect;
+
+	Character(int label, Rect boundRect)
+	{
+		this->label = label;
+		this->boundRect = boundRect;
+	}
+};
+
+class Cmp 
+{
+public:
+	bool operator () (const Character &a, const Character &b)
+	{
+		return a.boundRect.x > b.boundRect.x;
+	}
+};
 
 // ============= Protoype ================================
 int findHole(int mode, vector<Point> con);
@@ -25,8 +46,13 @@ int midRound(vector<Point> contr);
 int roughHead(vector<Point> contr);
 int cutShabShab(int mode, vector<Point> con);
 int vowel1(vector<Point> contr); // ิ ี ึ ื
+int ThreeHead(vector<Point> contr);
 
 // ======================================================
+
+Mat inputImage, outputImage;
+enum { NONE, UP, DOWN, LEFT, RIGHT };
+priority_queue<Character, vector<Character>, Cmp> pq;
 
 int cutShabShab(int mode, vector<Point> con) {
 	int xs, ys, xf, yf;
@@ -383,16 +409,14 @@ int findHole(int mode, vector<Point> con)
 	temp = temp.colRange(xs, xf).rowRange(ys, yf);
 
 	findContours(temp, hole, RETR_TREE, CHAIN_APPROX_NONE);
-	cvtColor(temp, temp, CV_GRAY2BGR);
 
-	/*if (mode == 1)
+	if (hole.size() == -1)
 	{
-	for (int i = 0; i < hole.size(); i++)
-	rectangle(temp, boundingRect(hole[i]), Scalar(0, 255, 0), 1, LINE_8, 0);
-	cout << hole.size() << endl;
-	imshow("temp", temp);
-	waitKey(0);
-	}*/
+		copyMakeBorder(temp, temp, 10, 10, 10, 10, BORDER_CONSTANT, Scalar(255, 255, 255));
+		findContours(temp, hole, RETR_TREE, CHAIN_APPROX_NONE);
+	}
+
+	cvtColor(temp, temp, CV_GRAY2BGR);
 
 	return hole.size();
 }
@@ -800,7 +824,7 @@ int vowel1(vector<Point> contr) // ิ ี ึ ื
 	vector<vector<Point>> hole;
 	findContours(temp1, hole, RETR_TREE, CHAIN_APPROX_NONE);
 
-	if (hole.size() == 3)
+	if (hole.size() > 0)
 		return 48;
 
 	return 47;
@@ -814,27 +838,25 @@ int NoHead(vector<Point> contr)
 	cvtColor(temp, temp, CV_BGR2GRAY);
 	int check = 0; // 0 is ก , 23 is ธ, 45 is า
 
-	for (int i = temp.rows - 1; i >= temp.rows / 2; i--)
+	if (passVerticalCount(contr, 0.5) == 3)
+		check = 23;
+	else if (passVerticalCount(contr, 0.5) == 2)
+		check = 66;
+	else if (passHorizontalCount(contr, 9.0 / 10.0) == 2)
+		check = 0;
+	else if (temp.rows > temp.cols * 2)
+		check = 61;
+	else
 	{
-		if (temp.at<uchar>(i, temp.cols / 2) < THRESHOLD)
-		{
-			check = 23;
-			break;
-		}
-	}
-
-	if (check == 0)
-	{
-		check = 45;
 		for (int i = 0; i < temp.cols / 2; i++)
 		{
 			if (temp.at<uchar>(temp.rows / 2, i) < THRESHOLD)
-			{
-				check = 0;
-				break;
-			}
+				return 64;
 		}
+		check = 45;
 	}
+
+
 
 	return check;
 }
@@ -859,10 +881,17 @@ int OneHead(vector<Point> contr)
 		else if (buffer == 2)
 			if (temp.at<uchar>(temp.rows / 2, temp.cols - 1) < THRESHOLD)
 				check = 28;
-			else if (temp.rows > temp.cols)
+			else if (temp.rows > temp.cols * 2)
 				check = 52;
+			else if (passVerticalCount(contr, 0.5) == 2)
+			{
+				if (temp.rows * 1.5 < temp.cols)
+					check = 47;
+				else
+					check = 65;
+			}
 			else
-				check = 47;
+				check = 65;
 		else if (buffer == 0)
 			check = 26;
 	}
@@ -918,7 +947,12 @@ int OneHead(vector<Point> contr)
 			check = 29;
 		else if (buffer == 2)
 			if (passVerticalCount(contr, 0.25) == 2)
-				check = 54;
+			{
+				if (temp.rows * 1.5 < temp.cols)
+					check = 46;
+				else
+					check = 54;
+			}
 			else
 				check = 6;
 		else if (buffer == 3)
@@ -938,7 +972,12 @@ int OneHead(vector<Point> contr)
 			check = 25;
 		else if (buffer == 9)
 			if (passVerticalCount(contr, 0.5) == 1)
-				check = 44;
+			{
+				if (passVerticalCount(contr, 0) == 1)
+					check = 44;
+				else
+					check = 62;
+			}
 			else
 				check = vowel1(contr);
 		else if (buffer == 10)
@@ -949,7 +988,9 @@ int OneHead(vector<Point> contr)
 		else if (buffer == 11)
 			check = 7;
 		else if (buffer == 12)
+		{
 			check = 1;
+		}
 		else if (buffer == 13)
 			check = 9;
 		else if (buffer == 14)
@@ -1002,7 +1043,13 @@ int TwoHead(vector<Point> contr)
 		if (check == 2) {
 			//ณ
 			if (cutShabShab(32, contr) == 2)
-				return 18;
+			{
+				cout << passHorizontalCount(contr, 0) << endl;
+				if (passHorizontalCount(contr, 9.0 / 10.0) == 2)
+					return 63;
+				else
+					return 18;
+			}
 			else {
 				//ห
 				if (cutShabShab(31, contr) == 2)
@@ -1058,6 +1105,13 @@ int TwoHead(vector<Point> contr)
 	return -1;
 }
 
+int ThreeHead(vector<Point> contr)
+{
+	if (passHorizontalCount(contr, 0.5) == 3)
+		return 63;
+	return 48;
+}
+
 void findOverAllHole()
 {
 	Mat temp = inputImage.clone();
@@ -1066,32 +1120,51 @@ void findOverAllHole()
 	threshold(temp, temp, 100, 255, THRESH_BINARY);
 	vector<vector<Point>> contr;
 	findContours(temp, contr, RETR_EXTERNAL, CHAIN_APPROX_NONE);
+	//cout << contr.size() << endl;
 
 	for (int i = 0; i < contr.size(); i++)
 	{
 		int overall = findHole(NONE, contr[i]) - 1;
 		Rect boundRect = boundingRect(contr[i]);
 		string a;
+		int b;
 		switch (overall)
 		{
 			//            case 1:
 			//                rectangle(input,boundingRect(contr[i]),Scalar(0,255,0),1,LINE_8,0);
 			//                break;
 		case 0:
-			a = to_string(NoHead(contr[i]));
+			b = NoHead(contr[i]);
+			pq.push(Character(b, boundRect));
+			a = to_string(b);
 			rectangle(outputImage, boundRect, Scalar(255, 0, 0), 2);
 			putText(outputImage, a, Point(boundRect.x, boundRect.y), 1, 1, Scalar(0, 0, 255), 1.8);
 			break;
 		case 1:
-			a = to_string(OneHead(contr[i]));
+			b = OneHead(contr[i]);
+			pq.push(Character(b, boundRect));
+			a = to_string(b);
 			rectangle(outputImage, boundRect, Scalar(0, 255, 0), 2);
 			putText(outputImage, a, Point(boundRect.x, boundRect.y), 1, 1, Scalar(0, 0, 255), 1.8);
 			break;
 		case 2:
-			a = to_string(TwoHead(contr[i]));
+			b = TwoHead(contr[i]);
+			pq.push(Character(b, boundRect));
+			a = to_string(b);
 			rectangle(outputImage, boundRect, Scalar(0, 255, 255), 2);
 			putText(outputImage, a, Point(boundRect.x, boundRect.y), 1, 1, Scalar(0, 0, 255), 1.8);
 			break;
+		case 3:
+			b = ThreeHead(contr[i]);
+			pq.push(Character(b, boundRect));
+			a = to_string(b);
+			rectangle(outputImage, boundRect, Scalar(0, 0, 255), 2);
+			putText(outputImage, a, Point(boundRect.x, boundRect.y), 1, 1, Scalar(0, 0, 255), 1.8);
+			break;
+		default:
+			pq.push(Character(61, boundRect));
+			rectangle(outputImage, boundRect, Scalar(0, 0, 0), 2);
+			putText(outputImage, "61", Point(boundRect.x, boundRect.y), 1, 1, Scalar(0, 0, 255), 1.8);
 
 			//            case 3:
 			//                rectangle(input,boundingRect(contr[i]),Scalar(255,0,0),1,LINE_8,0);
@@ -1106,11 +1179,18 @@ int main()
 	//More accuary for big cbaracter
 	//resize(input, input, Size(input.cols * 10, input.rows * 10), 0, 0, INTER_LINEAR);
 
-	inputImage = imread("test6.png");
+	inputImage = imread("test5.png");
 	outputImage = inputImage.clone();
 	threshold(inputImage, inputImage, THRESHOLD, 255, THRESH_BINARY);
 
 	findOverAllHole();
+
+	while (!pq.empty())
+	{
+		cout << pq.top().label << endl;
+		pq.pop();
+	}
+
 	imshow("thai catch", inputImage);
 	imshow("output", outputImage);
 	waitKey(0);
